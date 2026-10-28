@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Token OS · Laboratorio Stellar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=Azeret+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* AstrOS · Nebula */
+  --void:#0A0912;--surface:#15131F;--paper:#F0EDF8;--signal:#B9A4FF;--alert:#FF5CA8;
+  --ok:#3DDC84;--danger:#FF3B30;
+  --bg:var(--void);--cell:var(--void);--raise:var(--surface);--ink:var(--paper);
+  --muted:color-mix(in srgb,var(--paper) 62%,var(--void));
+  --line:color-mix(in srgb,var(--paper) 14%,transparent);
+  --on-signal:var(--void);
+  --hazard:repeating-linear-gradient(-45deg,var(--signal) 0 12px,var(--void) 12px 24px);
+  color-scheme:dark;
+  --display:"Archivo",Arial,sans-serif;--mono:"Azeret Mono",ui-monospace,monospace;
+  --step--2:.74rem;--step--1:clamp(.8rem,.77rem + .15vw,.88rem);--step-0:clamp(.92rem,.88rem + .2vw,1rem);
+  --step-1:clamp(1.2rem,1.05rem + .7vw,1.6rem);--step-2:clamp(1.7rem,1.3rem + 1.8vw,2.8rem);
+  --step-3:clamp(2.4rem,1.6rem + 3.6vw,4.8rem);--step-4:clamp(3.4rem,1rem + 10.5vw,11rem);
+  --wrap:1320px;--gutter:clamp(16px,3vw,40px);--cut:clamp(28px,4vw,64px);
+  --ease-out:cubic-bezier(.16,1,.3,1);--ease-spring:cubic-bezier(.34,1.56,.64,1);
+}
+.slab{--bg:var(--paper);--cell:var(--paper);--raise:color-mix(in srgb,var(--paper) 55%,#fff);--ink:var(--void);
+  --muted:color-mix(in srgb,var(--void) 66%,var(--paper));--line:color-mix(in srgb,var(--void) 18%,transparent)}
+*{box-sizing:border-box}
+html,body{overflow-x:clip}
+body{margin:0;background:var(--bg);color:var(--ink);font:var(--step-0)/1.6 var(--mono)}
+a{color:var(--signal)}
+button,input,select{font:inherit;color:inherit;border-radius:0}
+:focus-visible{outline:2px solid var(--signal);outline-offset:3px}
+.guides{position:fixed;inset:0;z-index:-1;pointer-events:none}
+.guides:before,.guides:after{content:"";position:absolute;top:0;bottom:0;width:1px;background:var(--line)}
+.guides:before{left:max(var(--gutter),calc(50% - var(--wrap)/2))}.guides:after{right:max(var(--gutter),calc(50% - var(--wrap)/2))}
+.sec{max-width:calc(var(--wrap) + 2px);margin:auto;padding-inline:var(--gutter)}
+.grid{display:grid;gap:1px;background:var(--line);border-block:1px solid var(--line);margin-bottom:22px}
+.cell{background:var(--cell);padding:clamp(1rem,2.4vw,1.8rem);min-width:0}
+@media(min-width:900px){.grid.two{grid-template-columns:minmax(0,5fr) minmax(0,7fr)}.grid.half{grid-template-columns:1fr 1fr}}
+.slab{position:relative;z-index:1;margin:clamp(30px,5vw,60px) 0;padding:var(--cut) 0 calc(var(--cut) + 40px);background:var(--bg);color:var(--ink);
+  background-image:radial-gradient(color-mix(in srgb,var(--void) 13%,transparent) 1px,transparent 1.5px);background-size:14px 14px;
+  clip-path:polygon(0 var(--cut),100% 0,100% calc(100% - var(--cut)),0 100%)}
+.slab:after{content:"";position:absolute;inset:0;pointer-events:none;background:var(--hazard);
+  clip-path:polygon(0 calc(100% - 18px),100% calc(100% - var(--cut) - 18px),100% calc(100% - var(--cut)),0 100%)}
+
+/* header */
+header{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.hd{display:flex;align-items:center;gap:12px 20px;flex-wrap:wrap;padding-block:10px}
+.logo{display:flex;align-items:center;gap:10px;font:900 1.25rem/1 var(--display);font-variation-settings:"wdth" 80;letter-spacing:.02em;text-transform:uppercase;color:var(--signal)}
+.logo svg{width:30px;height:30px}.logo .os{color:var(--alert);margin-left:-.2em}.logo{gap:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+nav{display:flex;order:3;width:100%;overflow-x:auto;background:var(--raise);border:1px solid var(--line)}
+@media(min-width:900px){nav{order:0;width:auto;margin-inline:auto}}
+nav button{flex:1 0 auto;background:none;border:0;padding:9px 16px;cursor:pointer;font:500 var(--step--2)/1.2 var(--mono);text-transform:uppercase;letter-spacing:.12em;color:var(--muted);white-space:nowrap}
+nav button:hover{color:var(--ink)}
+nav button[aria-selected=true]{background:var(--signal);color:var(--on-signal);font-weight:700}
+.hd .cta{margin-left:auto}
+.btn{display:inline-block;border:0;cursor:pointer;padding:12px 18px;font:700 var(--step--1)/1 var(--mono);text-transform:uppercase;letter-spacing:.08em;text-decoration:underline;text-underline-offset:4px;
+  background:var(--signal);color:var(--on-signal);box-shadow:4px 4px 0 var(--alert);transition:transform .15s,box-shadow .15s,background .2s}
+.btn:hover{background:var(--alert);color:#fff}
+.btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--alert)}
+.btn.line{background:transparent;color:var(--ink);border:1px solid var(--ink);box-shadow:4px 4px 0 var(--ink)}
+.btn.line:hover{background:var(--raise);color:var(--ink)}
+.btn.line:active{box-shadow:1px 1px 0 var(--ink)}
+.btn.blk{background:var(--alert);color:#fff;box-shadow:none;text-decoration:none}
+.btn:disabled{opacity:.5;cursor:default}
+
+/* hero */
+.hero .grid{margin:0;border-top:0}
+.hero .cell:first-child{container-type:inline-size;overflow:hidden}.hero .cell{display:flex;flex-direction:column;justify-content:center;gap:14px;padding-block:clamp(2rem,5vw,4rem)}
+.kicker{font-size:var(--step--2);text-transform:uppercase;letter-spacing:.16em;color:var(--signal)}
+.slab .kicker{color:var(--ink)}
+.kicker:before{content:"■ ";color:var(--alert)}
+.hero h1{margin:0;font:900 min(18cqw,8.5rem)/.86 var(--display);white-space:nowrap;font-variation-settings:"wdth" 72;text-transform:uppercase;color:var(--signal);transition:font-variation-settings .5s var(--ease-out)}
+.hero h1:hover{font-variation-settings:"wdth" 100}
+.hero h1 .os{color:var(--alert)}.hero h1 .gap{margin-left:.18em}.hero h1 span{display:inline-block;animation:rise .8s var(--ease-out) both}
+@keyframes rise{from{transform:translateY(60%);opacity:0}to{transform:none;opacity:1}}
+.hero p{margin:0;max-width:52ch;color:var(--muted)}
+.orbit{position:relative;min-height:240px;padding:0!important;overflow:hidden}
+.orbit svg{position:absolute;inset:0;width:100%;height:100%}
+.orbit .g{transform-origin:100px 100px;animation:spin 18s linear infinite}.orbit:hover .g{animation-duration:4s}
+.sticker{position:absolute;right:clamp(12px,3vw,32px);bottom:clamp(12px,3vw,28px);background:var(--alert);color:#fff;font:900 1.3rem/1 var(--display);font-variation-settings:"wdth" 62;text-transform:uppercase;padding:8px 14px;box-shadow:4px 4px 0 var(--void);rotate:8deg;animation:pop .6s .9s var(--ease-spring) both}
+@keyframes pop{from{scale:2.4;opacity:0}to{scale:1;opacity:1}}
+.chainviz{position:relative;min-height:300px;overflow:hidden;padding:0!important;display:block!important;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:32px 32px}
+.mc-rail{position:absolute;left:0;top:44%;translate:0 -50%;display:flex;align-items:center;transition:transform .8s var(--ease-out)}
+.mb{flex:0 0 120px;height:142px;border:2px solid var(--ink);background:var(--raise);padding:9px;font-size:.66rem;line-height:1.4;box-shadow:4px 4px 0 var(--alert);cursor:pointer;overflow:hidden;color:var(--muted);transition:background .25s,box-shadow .25s}
+.mb b{display:block;color:var(--signal);font:900 1.05rem/1 var(--display);margin-bottom:6px}.mb i{font-style:normal;color:var(--ink);word-break:break-all}
+.mb.pend{border-style:dashed;box-shadow:4px 4px 0 var(--line);animation:blinkb .5s steps(2) infinite}
+.mb.new{animation:seal .5s var(--ease-spring)}
+.mb.bad{background:var(--danger);color:#fff;box-shadow:4px 4px 0 var(--ink)}.mb.bad b,.mb.bad i{color:#fff}
+@keyframes blinkb{50%{border-color:var(--signal)}}@keyframes seal{from{scale:1.25;background:var(--signal)}}
+.ml{flex:0 0 32px;height:3px;background:var(--alert);position:relative;transition:background .25s}.ml:after{content:"";position:absolute;right:-1px;top:-5px;border:6.5px solid transparent;border-left:9px solid var(--alert);border-right:0}
+.ml.bad{background:var(--danger)}.ml.bad:after{border-left-color:var(--danger)}
+.mc-cap{position:absolute;left:clamp(12px,2.5vw,24px);bottom:clamp(12px,2.5vw,22px);max-width:58%;background:var(--void);border-left:3px solid var(--signal);padding:8px 10px;font-size:var(--step--2);color:var(--ink)}
+.ticker{position:relative;z-index:2;margin:34px 0 -20px;background:var(--void);border-block:3px solid var(--alert);rotate:-1.5deg;overflow:hidden;padding:18px 0}
+.ticker:before,.ticker:after{content:"";position:absolute;left:0;right:0;height:8px;background:repeating-linear-gradient(90deg,var(--paper) 0 14px,transparent 14px 30px)}
+.ticker:before{top:3px}.ticker:after{bottom:3px}
+.ticker div{display:flex;width:max-content;gap:28px;animation:slide 34s linear infinite;font:900 1.5rem/1 var(--display);font-variation-settings:"wdth" 62;text-transform:uppercase;color:var(--signal)}
+.ticker:hover div{animation-play-state:paused}.ticker i{font-style:normal;color:var(--alert)}.ticker b{color:var(--paper);font-weight:900}
+@keyframes slide{to{transform:translateX(-50%)}}
+
+/* chapter header */
+main{padding-bottom:40px}
+section{display:none}section.on{display:block;animation:fade .5s var(--ease-out)}
+@keyframes fade{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+.chap{display:grid;gap:1px;background:var(--line);border-block:1px solid var(--line);margin:40px 0 22px}
+@media(min-width:900px){.chap{grid-template-columns:1.3fr 1fr}}
+.chap .cell{display:flex;flex-direction:column;gap:6px;justify-content:flex-end}
+.chap .cell:last-child{color:var(--muted)}
+.num{font:900 var(--step-3)/.8 var(--display);font-variation-settings:"wdth" 62;transform:skewX(-10deg);color:transparent;-webkit-text-stroke:2px var(--signal);width:max-content}
+.slab .num{color:var(--ink);-webkit-text-stroke:0;text-shadow:6px 6px 0 var(--signal)}
+.chap h2,.h2{margin:0;font:900 var(--step-2)/.9 var(--display);font-variation-settings:"wdth" 72;text-transform:uppercase;color:var(--signal)}
+.slab .h2{color:var(--ink)}
+h3.k{margin:0 0 12px;font:500 var(--step--2)/1.4 var(--mono);text-transform:uppercase;letter-spacing:.16em;color:var(--muted)}
+h3.k:before{content:"■ ";color:var(--alert)}
+
+/* forms */
+label{display:block;font-size:var(--step--2);text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:14px 0 5px}
+input,select{width:100%;background:var(--cell);border:1px solid var(--ink);padding:11px 12px}
+input[type=number]{text-align:right;font-variant-numeric:tabular-nums}
+input:focus,select:focus{border-color:var(--signal);box-shadow:4px 4px 0 var(--signal);outline:0}
+select option{background:var(--surface)}
+input[type=checkbox]{appearance:none;width:20px;height:20px;padding:0;flex:none;cursor:pointer;box-shadow:none!important}
+input[type=checkbox]:checked{background:var(--signal);box-shadow:inset 0 0 0 4px var(--cell)!important}
+input[type=range]{padding:0;border:0;accent-color:var(--signal)}
+.row{display:flex;gap:10px}.row>*{flex:1;min-width:0}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.chip{background:none;border:1px solid var(--line);padding:5px 12px;font-size:var(--step--2);cursor:pointer;letter-spacing:.06em}
+.chip:hover{border-color:var(--signal);color:var(--signal)}
+.switch{display:flex;align-items:center;gap:10px;margin-top:16px;font-size:var(--step--1);color:var(--muted);text-transform:none;letter-spacing:0;cursor:pointer}
+.note{font-size:var(--step--1);color:var(--muted);margin:10px 0 0}.mut{color:var(--muted);font-size:var(--step--2)}
+.neg{color:var(--alert)}.slab .neg{color:var(--danger)}
+.stat{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px}
+.state{font-size:var(--step--2);background:var(--signal);color:var(--on-signal);padding:3px 9px;font-weight:700;border:2px solid var(--ink);rotate:-3deg;box-shadow:2px 2px 0 var(--ink);display:inline-block}
+.badge{display:inline-block;font-size:var(--step--2);text-transform:uppercase;letter-spacing:.1em;padding:2px 8px;border:1px solid var(--line)}
+.badge.off{border-color:var(--alert);color:var(--alert)}.badge.on{background:var(--signal);color:var(--on-signal);border-color:var(--signal)}
+.stepmsg{background:var(--raise);border-left:3px solid var(--signal);padding:12px 14px;margin-top:12px;min-height:80px;font-size:var(--step--1)}
+.stepmsg b{display:block;font:600 var(--step-1)/1.2 var(--display);letter-spacing:-.01em;margin-bottom:4px}
+.live{display:inline-flex;align-items:center;gap:8px;font-size:var(--step--2);color:var(--muted)}
+.live:before{content:"";width:9px;height:9px;border-radius:50%;background:var(--alert)}.live.ok:before{background:var(--ok);animation:pulse 1.4s infinite}
+@keyframes pulse{50%{opacity:.25}}
+
+/* breakdown */
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+td{padding:10px 0;border-bottom:1px dotted var(--line);vertical-align:top}td:last-child{text-align:right;padding-left:12px}
+tr.total td{font:900 var(--step-2)/1.1 var(--display);font-variation-settings:"wdth" 72;text-transform:uppercase;border-bottom:2px solid var(--ink);padding:16px 0;color:var(--ink)}
+tr.total td:last-child{text-shadow:3px 3px 0 var(--signal)}
+
+/* track */
+.track{position:relative;display:flex;justify-content:space-between;gap:6px;padding:56px 0 8px}
+.track:before{content:"";position:absolute;left:12%;right:12%;top:calc(56px + 32px);border-top:2px dotted var(--alert)}
+.node{position:relative;z-index:1;flex:1;min-width:0;text-align:center;font:500 var(--step--2)/1.3 var(--mono);text-transform:uppercase;letter-spacing:.06em;cursor:pointer;background:none;border:0;color:var(--muted);padding:0}
+.node .ic{width:64px;height:64px;margin:0 auto 8px;background:var(--raise);border:2px solid var(--ink);display:grid;place-items:center;color:var(--ink);transition:.2s;box-shadow:4px 4px 0 var(--line)}
+.node.chain .ic{border-radius:50%}
+.node.act{color:var(--ink)}
+.node.act .ic{background:var(--signal);color:var(--on-signal);box-shadow:4px 4px 0 var(--alert);transform:translate(-2px,-2px)}
+.node.bad .ic{background:var(--danger);color:#fff;box-shadow:4px 4px 0 var(--ink)}
+.coin{position:absolute;top:2px;left:0;z-index:2;padding:6px 12px;background:var(--paper);color:var(--void);font:700 var(--step--1)/1 var(--mono);white-space:nowrap;transition:left .9s cubic-bezier(.7,0,.2,1);transform:translateX(-50%);box-shadow:4px 4px 0 var(--signal);border:2px solid var(--void)}
+.coin.usdc{background:var(--signal);box-shadow:4px 4px 0 var(--alert)}.coin.err{background:var(--danger);color:#fff;box-shadow:4px 4px 0 var(--ink)}
+ol.tl{list-style:none;margin:0;padding:0}
+ol.tl li{display:flex;gap:12px;padding:12px;cursor:pointer;border-left:3px solid var(--line);margin-bottom:6px}
+ol.tl li:hover{background:var(--raise)}
+ol.tl li .dot{width:14px;height:14px;border:2px solid var(--muted);margin-top:4px;flex:none;border-radius:50%}
+ol.tl li.done{border-color:var(--ok)}ol.tl li.done .dot{background:var(--ok);border-color:var(--ok)}
+ol.tl li.cur{background:var(--raise);border-color:var(--signal)}ol.tl li.cur .dot{background:var(--signal);border-color:var(--signal);animation:pulse 1.2s infinite}
+ol.tl li.err{border-color:var(--danger)}ol.tl li.err .dot{background:var(--danger);border-color:var(--danger)}
+ol.tl b{font:600 var(--step-0)/1.3 var(--display)}
+.chev{height:16px;margin:6px 0 2px;background:linear-gradient(45deg,transparent 0 40%,var(--alert) 40% 52%,transparent 52%) 0 0/14px 8px repeat-x,linear-gradient(135deg,transparent 0 40%,var(--alert) 40% 52%,transparent 52%) 0 8px/14px 8px repeat-x;animation:march 1s linear infinite}
+@keyframes march{to{background-position:14px 0,14px 8px}}
+
+/* dialog */
+dialog{background:var(--cell);color:var(--ink);border:2px solid var(--ink);box-shadow:8px 8px 0 var(--signal);max-width:640px;width:calc(100% - 32px);padding:24px;max-height:90vh;overflow:auto}
+dialog::backdrop{background:color-mix(in srgb,var(--void) 85%,transparent);background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:40px 40px}
+dialog h3{margin:0 0 6px;font:900 var(--step-2)/.9 var(--display);font-variation-settings:"wdth" 72;text-transform:uppercase;color:var(--signal)}
+dialog .st{border-left:3px solid var(--line);padding:2px 0 2px 14px;margin:16px 0;font-size:var(--step--1)}
+dialog .st b{font:600 var(--step-1)/1.2 var(--display)}
+dialog .st.reached{border-color:var(--ok)}dialog .st.fail{border-color:var(--danger)}dialog .st.todo{opacity:.55}
+
+/* chain */
+.belt{display:flex;gap:16px;overflow:hidden;padding:8px 8px 12px;min-height:140px}
+.blk{flex:0 0 160px;background:var(--raise);border:2px solid var(--ink);padding:12px;font-size:var(--step--2);box-shadow:5px 5px 0 var(--alert);cursor:pointer;animation:in .7s var(--ease-out)}
+.blk b{display:block;font:900 1.5rem/1 var(--display);font-variation-settings:"wdth" 72;color:var(--signal);margin-bottom:6px}
+.blk.new{box-shadow:5px 5px 0 var(--signal)}.blk:hover{transform:translate(-2px,-2px)}
+@keyframes in{from{transform:translateX(-80px) scale(.8);opacity:0}to{transform:none;opacity:1}}
+.bar{border:1px solid var(--ink);padding:2px;margin-top:10px}.bar i{display:block;height:10px;width:0;background:repeating-linear-gradient(90deg,var(--signal) 0 10px,transparent 10px 12px)}
+.feed{max-height:280px;overflow:auto;font-size:var(--step--1)}
+.feed div{padding:8px 0;border-bottom:1px dotted var(--line);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.mono{word-break:break-all}
+.big{font:900 var(--step-3)/.95 var(--display);font-variation-settings:"wdth" 72;text-transform:uppercase;color:var(--signal)}
+.eq{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin-top:20px}
+.eq div{background:var(--cell);padding:12px}.eq b{display:block;font-size:var(--step-1);font-variant-numeric:tabular-nums}
+
+/* índice lateral */
+.idx{display:none}
+@media(min-width:1100px){.idx{display:flex;flex-direction:column;position:fixed;right:0;top:50%;translate:0 -50%;z-index:15;background:var(--void);border-left:3px solid var(--signal)}
+ .idx button{writing-mode:vertical-rl;background:none;border:0;color:var(--muted);padding:16px 8px;cursor:pointer;font:700 var(--step--1)/1 var(--mono);letter-spacing:.1em}
+ .idx button.cur,.idx button:hover{color:var(--signal)}}
+footer{padding:40px 0 60px;color:var(--muted);font-size:var(--step--1)}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="guides"></div>
+<header>
+ <div class="sec hd">
+  <div class="logo"><svg viewBox="0 0 40 40" aria-hidden="true"><rect x="2" y="11" width="14" height="18" fill="currentColor"/><rect x="24" y="11" width="14" height="18" fill="none" stroke="var(--alert)" stroke-width="3"/><path d="M16 20h8" stroke="var(--alert)" stroke-width="3"/></svg><span>Token</span><span class="os">OS</span></div>
+  <nav role="tablist" id="tabs" aria-label="Secciones">
+   <button role="tab" data-t="lab" aria-selected="true">01 Laboratorio</button>
+   <button role="tab" data-t="ruta" aria-selected="false">02 Recorrido</button>
+   <button role="tab" data-t="chain" aria-selected="false">03 Blockchain</button>
+   <button role="tab" data-t="conv" aria-selected="false">04 Convertidor</button>
+  </nav>
+  <button class="btn blk cta" data-t="conv">→ ¿Cuánto es en…?</button>
+ </div>
+</header>
+<aside class="idx" aria-label="Índice"><button data-t="lab" class="cur">01</button><button data-t="ruta">02</button><button data-t="chain">03</button><button data-t="conv">04</button></aside>
+
+<div class="sec hero"><div class="grid two">
+ <div class="cell">
+  <div class="kicker">Stellar testnet · Anchor Lendara</div>
+  <h1 aria-label="Token OS"><span>T</span><span>O</span><span>K</span><span>E</span><span>N</span><span class="os gap">O</span><span class="os">S</span></h1>
+  <p>Elige una cantidad ficticia de dinero y mira cómo se vuelve un activo digital. Las comisiones del sandbox son de <a href="https://lendara-monorepo-fixh.vercel.app/docs/es" target="_blank" rel="noopener">Lendara</a>; las tasas de referencia son de mercado real.</p>
+ </div>
+ <div class="cell chainviz" role="img" aria-label="Demostración de una cadena de bloques: cada bloque guarda el hash del anterior"><div class="mc-rail" id="mcRail"></div><div class="mc-cap">Cada bloque guarda el hash del anterior. Toca uno para alterarlo y mira cómo se rompe la cadena. <span class="mut">(demo ilustrativa)</span></div><div class="sticker">Testnet</div></div>
+</div></div>
+<div class="ticker" aria-hidden="true"><div>
+ <span>Moneda local <i>✦</i> <b>Anchor</b> <i>✦</i> Stellar <i>✦</i> <b>USDC</b> <i>✦</i> Comisiones <i>✦</i> <b>Testnet</b> <i>✦</i></span>
+ <span>Moneda local <i>✦</i> <b>Anchor</b> <i>✦</i> Stellar <i>✦</i> <b>USDC</b> <i>✦</i> Comisiones <i>✦</i> <b>Testnet</b> <i>✦</i></span>
+ <span>Moneda local <i>✦</i> <b>Anchor</b> <i>✦</i> Stellar <i>✦</i> <b>USDC</b> <i>✦</i> Comisiones <i>✦</i> <b>Testnet</b> <i>✦</i></span>
+ <span>Moneda local <i>✦</i> <b>Anchor</b> <i>✦</i> Stellar <i>✦</i> <b>USDC</b> <i>✦</i> Comisiones <i>✦</i> <b>Testnet</b> <i>✦</i></span>
+</div></div>
+
+<main>
+<!-- LAB -->
+<section id="lab" class="on">
+ <div class="sec">
+  <div class="chap"><div class="cell"><div class="num">01</div><div class="kicker">Misión · conversión</div><h2>Laboratorio</h2></div><div class="cell">Convierte dinero ficticio a USDC y revisa cada cargo antes de recibirlo.</div></div>
+  <div class="grid two">
+   <div class="cell">
+    <h3 class="k">Elige tu dinero ficticio</h3>
+    <label for="amt">Monto a pagar</label>
+    <div class="row"><input id="amt" type="number" min="0" step="0.01" value="25000" inputmode="decimal"><select id="cur" style="max-width:110px" aria-label="Moneda"><option>CRC</option><option>ARS</option><option>CLP</option></select></div>
+    <div class="chips" id="quick"></div>
+    <label for="scn">Tarjeta de prueba</label>
+    <select id="scn"></select>
+    <label class="switch"><input type="checkbox" id="prod"> Mostrar comisiones de producción ilustrativas</label>
+    <div class="row" style="margin-top:20px"><button class="btn" id="play">▶ Convertir</button><button class="btn line" id="why">¿Qué acaba de pasar?</button></div>
+    <p class="note" id="limitmsg"></p>
+    <p class="note"><span class="live" id="rateLive">cargando tasas…</span></p>
+   </div>
+   <div class="cell">
+    <h3 class="k">El viaje del dinero</h3>
+    <div class="track" id="track1"></div>
+    <div class="stat"><span class="state" id="st1">incomplete</span><span class="mut" id="stn1"></span></div>
+    <div class="stepmsg" id="msg1"></div>
+   </div>
+  </div>
+ </div>
+ <div class="slab"><div class="sec">
+  <div class="num">02</div>
+  <div class="kicker" style="margin-top:10px">Desglose</div>
+  <div class="h2" style="margin-bottom:16px">Cuánto recibes y qué cargos se aplican</div>
+  <table id="brk"></table>
+  <p class="note" id="brknote"></p>
+ </div></div>
+</section>
+
+<!-- RUTA -->
+<section id="ruta">
+ <div class="sec">
+  <div class="chap"><div class="cell"><div class="num">02</div><div class="kicker">Misión · participantes</div><h2>Recorrido</h2></div><div class="cell">Qué pasa fuera de la blockchain y qué queda registrado en ella, paso a paso.</div></div>
+  <div class="grid two">
+   <div class="cell">
+    <h3 class="k">Línea temporal</h3>
+    <label for="scn2">Operación de demostración</label>
+    <select id="scn2"></select>
+    <div class="chev"></div>
+    <ol class="tl" id="tl"></ol>
+    <div class="row" style="margin-top:16px"><button class="btn" id="play2">▶ Reproducir</button><button class="btn line" id="reset2">↺ Reiniciar</button></div>
+   </div>
+   <div class="cell">
+    <h3 class="k">Participantes</h3>
+    <div class="track" id="track2"></div>
+    <label for="scrub">Revisar paso a paso</label>
+    <input type="range" id="scrub" min="0" max="4" value="0">
+    <div class="stat"><span class="state" id="st2">incomplete</span><span class="badge" id="where"></span></div>
+    <div class="stepmsg" id="msg2"></div>
+    <div class="stepmsg" id="nodeinfo"></div>
+   </div>
+  </div>
+ </div>
+</section>
+
+<!-- CHAIN -->
+<section id="chain">
+ <div class="sec">
+  <div class="chap"><div class="cell"><div class="num">03</div><div class="kicker">Red · Stellar testnet</div><h2>Blockchain en vivo</h2></div><div class="cell">Cada ~5 s se cierra un ledger: un bloque de transacciones confirmadas e inmutables.</div></div>
+  <div class="grid"><div class="cell">
+   <div class="stat" style="margin:0 0 8px"><h3 class="k" style="margin:0">Ledgers recientes</h3><span class="live" id="chainLive">conectando a Horizon…</span></div>
+   <div class="belt" id="belt"></div>
+   <div class="stat"><span class="mut">Toca un bloque para ver sus datos.</span><span class="mut" id="nextin"></span></div>
+   <div class="bar"><i id="prog"></i></div>
+   <div id="blkdet" class="stepmsg mono">Sin bloque seleccionado.</div>
+  </div></div>
+  <div class="grid two">
+   <div class="cell"><h3 class="k">Pagos en vivo</h3><div class="feed mono" id="feed"><span class="mut">esperando pagos…</span></div></div>
+   <div class="cell">
+    <h3 class="k">Revisa tu cuenta</h3>
+    <label for="acct">Clave pública (G…) de testnet</label>
+    <input id="acct" placeholder="G…" spellcheck="false" style="text-align:left">
+    <button class="btn" id="chk" style="margin-top:14px">Consultar</button>
+    <div id="acctout" class="note"></div>
+    <p class="note">Tras un depósito, el USDC aparece aquí: en la blockchain queda el pago, no la tarjeta ni el KYC.</p>
+   </div>
+  </div>
+ </div>
+</section>
+
+<!-- CONV -->
+<section id="conv">
+ <div class="sec">
+  <div class="chap"><div class="cell"><div class="num">04</div><div class="kicker">Utilidad · mercado real</div><h2>Convertidor</h2></div><div class="cell">Cuánto es en XLM, USDC, colones, pesos o dólares, con tasas reales.</div></div>
+  <div class="grid"><div class="cell">
+   <div class="row" style="flex-wrap:wrap;align-items:end">
+    <div style="flex:1 1 140px"><label for="cv">Cantidad</label><input id="cv" type="number" value="100" step="any"></div>
+    <div style="flex:1 1 120px"><label for="cf">De</label><select id="cf"></select></div>
+    <div style="flex:0 0 56px"><button class="btn line" id="swap" aria-label="Invertir" style="width:100%;padding:11px 0">⇄</button></div>
+    <div style="flex:1 1 120px"><label for="ct">A</label><select id="ct"></select></div>
+   </div>
+   <div class="big" id="cres" style="margin-top:22px"></div>
+   <div class="eq" id="ceq"></div>
+   <p class="note" id="cnote"></p>
+  </div></div>
+ </div>
+</section>
+</main>
+
+<footer><div class="sec">Token <b style="color:var(--alert)">OS</b> · todo en testnet, sin valor real · hecho con Stellar y el anchor de Lendara</div></footer>
+
+<dialog id="dlg"><h3>¿Qué acaba de pasar?</h3><div id="dlgbody"></div><button class="btn" id="dclose" style="margin-top:8px">Entendido</button></dialog>
+<script>
+const $=s=>document.querySelector(s);
+const fmt=(n,d=2)=>new Intl.NumberFormat('es-CR',{minimumFractionDigits:d,maximumFractionDigits:d}).format(n);
+const sym={CRC:'₡',ARS:'$',CLP:'$',USD:'US$',USDC:'USDC ',XLM:'XLM ',EUR:'€'};
+const HORIZON='https://horizon-testnet.stellar.org';
+
+/* ---------- Tasas ---------- */
+// Sandbox de Lendara (ficticias, por 1 USDC) y comisión fija: docs /test-cards
+const SANDBOX={CRC:510,ARS:1000,CLP:950},FEE=0.5,MIN=1,MAX=10000;
+const R={usd:{USD:1,USDC:1,CRC:500,ARS:1400,CLP:940,EUR:0.92},xlm:0.2,live:false,ts:null}; // respaldo sin conexión
+async function loadRates(){
+  try{
+    const [a,b]=await Promise.all([
+      fetch('https://open.er-api.com/v6/latest/USD').then(r=>r.json()),
+      fetch('https://api.coingecko.com/api/v3/simple/price?ids=stellar&vs_currencies=usd').then(r=>r.json())]);
+    for(const k of ['CRC','ARS','CLP','EUR'])if(a.rates[k])R.usd[k]=a.rates[k];
+    if(b.stellar&&b.stellar.usd)R.xlm=b.stellar.usd;
+    R.live=true;R.ts=new Date();
+  }catch(e){R.live=false}
+  const el=$('#rateLive');
+  el.className='live'+(R.live?' ok':'');
+  el.textContent=R.live?`Mercado real · 1 USD = ${fmt(R.usd.CRC,0)} CRC · 1 XLM = US$ ${fmt(R.xlm,4)}`:'Sin conexión: usando valores de referencia aproximados';
+  update();convert();
+}
+
+/* ---------- Escenarios y pasos ---------- */
+const SCN={
+ approved:{n:'4242 4242 4242 4242 · aprobada',fail:null},
+ delayed:{n:'4000 0000 0000 0077 · retrasada (30 s en pending_anchor)',fail:null,delay:true},
+ trust:{n:'Sin trustline a USDC · pending_trust',fail:'trust'},
+ kyc:{n:'4000 0000 0000 0002 · KYC rechazado',fail:'kyc'},
+ noPay:{n:'4000 0000 0000 9995 · pago no recibido',fail:'exp'}
+};
+function steps(){
+ const s=SCN[$('#scn').value]||SCN.approved,c=calc();
+ const base=[
+  {node:0,state:'incomplete',off:true,coin:`${sym[c.cur]}${fmt(c.fiat,0)}`,t:'Decides cuánto convertir',d:`Abres el widget de Lendara y eliges ${fmt(c.fiat)} ${c.cur}. El anchor crea una sesión SEP-24 para tu cuenta Stellar.`,proc:'Procesa: monto elegido, moneda, tu clave pública (G…). Todavía no hay dinero movido.'},
+  {node:1,state:'pending_user_transfer_start',off:true,coin:`${sym[c.cur]}${fmt(c.fiat,0)}`,t:'Pagas con tarjeta',d:`Confirmas la cotización (1 USDC = ${fmt(c.rate,0)} ${c.cur}) y pagas. En la vida real, el proveedor de pago autoriza el cargo; aquí es simulado.`,proc:'Procesa: datos de tarjeta, autorización, antifraude. Estos datos NUNCA llegan a la blockchain.'},
+  {node:2,state:'pending_anchor',off:true,coin:`${fmt(c.net,2)} USDC`,usdc:true,t:'El anchor recibe el pago y convierte',d:`Lendara recibe la confirmación del pago, aplica su comisión fija de ${fmt(FEE)} USDC y prepara ${fmt(c.net)} USDC para ti.`,proc:'Procesa: confirmación de cobro, cotización, KYC, inventario de USDC y su cuenta emisora/distribuidora.'},
+  {node:2,state:'pending_stellar',off:false,coin:`${fmt(c.net,2)} USDC`,usdc:true,t:'Se envía el pago a Stellar',d:'El anchor firma una transacción de pago con su clave y la envía a la red. Los validadores la incluyen en un ledger (~5 s).',proc:'Procesa: transacción firmada, comisión de red (0,00001 XLM), número de secuencia.'},
+  {node:3,state:'completed',off:false,coin:`${fmt(c.net,2)} USDC`,usdc:true,t:'¡Recibido en tu cuenta Stellar!',d:`Tu cuenta tiene ${fmt(c.net)} USDC. El hash de la transacción queda registrado públicamente y es inmutable.`,proc:'Registra on-chain: cuenta origen, cuenta destino, activo, monto y hash. No registra tu nombre ni tu tarjeta.'}];
+ if(s.fail==='kyc'){return [base[0],base[1],{node:1,state:'error',off:true,err:true,coin:'✖',t:'KYC rechazado',d:'La verificación de identidad falló, así que el anchor cancela la operación. No se movió nada en Stellar.',proc:'Mensaje: «KYC rejected». Todo ocurrió fuera de la blockchain.'}]}
+ if(s.fail==='exp'){return [base[0],base[1],{node:1,state:'expired',off:true,err:true,coin:'⌛',t:'El pago nunca llegó',d:'El anchor no recibió confirmación del pago a tiempo. La sesión expira y no se envía USDC.',proc:'Estado final: expired. Sin rastro on-chain.'}]}
+ if(s.fail==='trust'){return [base[0],base[1],base[2],{node:2,state:'pending_trust',off:false,err:true,coin:`${fmt(c.net,2)} USDC`,usdc:true,t:'Tu cuenta no tiene trustline a USDC',d:'En Stellar debes autorizar explícitamente cada activo (trustline) antes de recibirlo. Lendara reintenta durante una hora.',proc:'Consulta la cuenta en Horizon: no existe línea de confianza al emisor del USDC de Lendara.'}]}
+ if(s.delay){base[2]=Object.assign({},base[2],{t:'El anchor tarda en procesar (30 s)',d:'La tarjeta «retrasada» mantiene la operación en pending_anchor durante 30 s antes de continuar. Es normal que los anchors reales tarden.'})}
+ return base;
+}
+let step=0,timer=null;
+const NODES=[
+ {ic:'<svg viewBox="0 0 40 40" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><circle cx="20" cy="14" r="6"/><path d="M8 34a12 12 0 0 1 24 0z"/></svg>',n:'Usuario',w:'Quien quiere convertir su dinero.',p:'Sabe: monto, moneda local, su clave Stellar.'},
+ {ic:'<svg viewBox="0 0 40 40" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><rect x="5" y="10" width="30" height="20"/><path d="M5 17h30"/><path d="M10 25h8"/></svg>',n:'Proveedor de pago',w:'Cobra la tarjeta o transferencia.',p:'Ve: datos de pago, autorización. Cobra su propia comisión.'},
+ {ic:'<svg viewBox="0 0 40 40" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><circle cx="20" cy="20" r="14"/><circle cx="20" cy="20" r="5" fill="currentColor"/><path d="M20 2v6M20 32v6M2 20h6M32 20h6"/></svg>',n:'Anchor (Lendara)',w:'Puente entre moneda local y la red Stellar.',p:'Ve: KYC, cotización, pagos. Tiene el USDC y lo emite a tu cuenta.'},
+ {ic:'<svg viewBox="0 0 40 40" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M20 4l5 11 12 1-9 8 3 12-11-6-11 6 3-12-9-8 12-1z"/></svg>',n:'Cuenta Stellar',w:'Tu dirección en la blockchain.',p:'Registra públicamente: saldos y pagos de USDC. Nada de identidad.'}];
+
+/* ---------- Cálculo ---------- */
+function calc(){
+ const cur=$('#cur').value,fiat=Math.max(0,+$('#amt').value||0),prod=$('#prod').checked;
+ const rate=SANDBOX[cur],real=R.usd[cur];
+ const gross=fiat/rate;
+ const proc=prod?fiat*0.029:0, spread=prod?gross*0.01:0;
+ const net=Math.max(0,gross-(proc/rate)-spread-FEE);
+ const marketUsd=fiat/real, lossPct=marketUsd>0?(marketUsd-net)/marketUsd*100:0;
+ return {cur,fiat,prod,rate,real,gross,proc,spread,net,marketUsd,lossPct,xlm:net/R.xlm};
+}
+function update(){
+ const c=calc(),B=$('#brk');
+ const row=(a,b,cls='')=>`<tr class="${cls}"><td>${a}</td><td>${b}</td></tr>`;
+ B.innerHTML=
+  row('Pagas',`${sym[c.cur]}${fmt(c.fiat)} ${c.cur}`)+
+  row(`Tasa Lendara sandbox <span class="mut">(ficticia)</span>`,`1 USDC = ${fmt(c.rate,0)} ${c.cur}`)+
+  row('Equivalente bruto',`${fmt(c.gross)} USDC`)+
+  (c.prod?row('Proveedor de pago <span class="mut">(2,9 % ilustrativo)</span>',`<span class="neg">− ${fmt(c.proc/c.rate)} USDC</span>`)+row('Margen del anchor <span class="mut">(1 % ilustrativo)</span>',`<span class="neg">− ${fmt(c.spread)} USDC</span>`):'')+
+  row('Comisión fija del anchor',`<span class="neg">− ${fmt(FEE)} USDC</span>`)+
+  row('Comisión de red Stellar <span class="mut">(la cubre el anchor)</span>','0,00001 XLM ≈ US$ '+fmt(0.00001*R.xlm,7))+
+  row('Recibes en tu cuenta Stellar',`${fmt(c.net)} USDC`,'total')+
+  row('≈ en XLM al precio real',`${fmt(c.xlm)} XLM`)+
+  row(`Valor real de ese dinero hoy`,`US$ ${fmt(c.marketUsd)} <span class="mut">(tasa ${fmt(c.real,0)} ${c.cur}/USD)</span>`);
+ $('#brknote').textContent=c.net>0?`Frente al mercado real, pierdes ≈ ${fmt(c.lossPct,1)} % entre tasa de sandbox y comisiones. Es ilustrativo: en producción la tasa la define el anchor.`:'';
+ const lm=$('#limitmsg');
+ lm.textContent=(c.net<MIN||c.net>MAX)?`⚠ Lendara acepta de ${MIN} a ${fmt(MAX,0)} USDC después de la comisión; ahora recibirías ${fmt(c.net)}.`:`Límites de Lendara: ${MIN}–${fmt(MAX,0)} USDC tras comisión.`;
+ lm.style.color=(c.net<MIN||c.net>MAX)?'var(--alert)':'';
+ renderAll();
+}
+
+/* ---------- Pista animada ---------- */
+function mkTrack(el,id){
+ el.innerHTML=NODES.map((n,i)=>`<button class="node ${i==3?'chain':''}" data-i="${i}"><div class="ic">${n.ic}</div>${n.n}</button>`).join('')+'<div class="coin"></div>';
+}
+function moveTrack(el,s){
+ const coin=el.querySelector('.coin');
+ el.querySelectorAll('.node').forEach((n,i)=>{n.classList.toggle('act',i===s.node&&!s.err);n.classList.toggle('bad',i===s.node&&!!s.err)});
+ const nd=el.querySelectorAll('.node')[s.node],er=el.getBoundingClientRect(),nr=nd.getBoundingClientRect();
+ coin.style.left=(nr.left-er.left+nr.width/2)+'px';
+ coin.textContent=s.coin;coin.className='coin'+(s.usdc?' usdc':'')+(s.err?' err':'');
+}
+function renderAll(){
+ const S=steps(),i=Math.min(step,S.length-1),s=S[i];
+ for(const [t,m,st,sn] of [['#track1','#msg1','#st1','#stn1'],['#track2','#msg2','#st2',null]]){
+  moveTrack($(t),s);
+  $(m).innerHTML=`<b>${s.t}</b>${s.d}`;$(st).textContent=s.state;
+  if(sn)$(sn).textContent=`paso ${i+1} de ${S.length}`;
+ }
+ $('#where').className='badge '+(s.off?'off':'on');$('#where').textContent=s.off?'Fuera de la blockchain':'Registrado en la blockchain';
+ $('#nodeinfo').innerHTML=`<b>${NODES[s.node].n}</b>${NODES[s.node].w}<br><span class="mut">${s.proc}</span>`;
+ $('#scrub').max=S.length-1;$('#scrub').value=i;
+ $('#tl').innerHTML=S.map((x,k)=>`<li data-k="${k}" class="${k<i?'done':''} ${k===i?'cur':''} ${x.err?'err':''}"><span class="dot"></span><div><b>${x.t}</b><div class="mut"><span class="state">${x.state}</span> <span class="badge ${x.off?'off':'on'}">${x.off?'off-chain':'on-chain'}</span></div></div></li>`).join('');
+}
+function play(){
+ clearInterval(timer);const S=steps();step=0;renderAll();
+ timer=setInterval(()=>{if(step>=S.length-1){clearInterval(timer);return}step++;renderAll()},1700);
+}
+function stop(){clearInterval(timer)}
+
+/* ---------- ¿Qué acaba de pasar? ---------- */
+function explain(){
+ const c=calc(),S=steps(),last=S.length-1,reached=Math.min(step,last),failed=S[last].err;
+ const txt=[
+  ['Tu dinero tradicional',`Elegiste ${fmt(c.fiat)} ${c.cur}. Eso es dinero «fiat»: lo respalda un banco central, no una blockchain. Hasta aquí nada está en Stellar.`],
+  ['Proveedor de pago',`Cobró tu tarjeta. Es una empresa regulada que cobra su comisión (aquí ${c.prod?'2,9 % ilustrativo':'no se simula'}). Conoce tus datos de pago; la blockchain no.`],
+  ['Anchor: el puente',`Un anchor es una empresa que recibe moneda local y a cambio emite un activo digital en Stellar. Lendara aplicó su tasa (1 USDC = ${fmt(c.rate,0)} ${c.cur}) y su comisión fija (${fmt(FEE)} USDC). Aquí se hace el KYC y se decide si la operación procede.`],
+  ['Stellar: el activo digital',`El anchor envió ${fmt(c.net)} USDC a tu cuenta. La red cobró 0,00001 XLM, el pago se confirmó en ~5 s y quedó un registro público e inmutable. USDC es un token estable (≈ 1 USD); necesitas una trustline para recibirlo.`]];
+ const idx=S.map(x=>x.node);
+ $('#dlgbody').innerHTML=txt.map((t,i)=>{
+  const r=idx.slice(0,reached+1).includes(i),f=failed&&i===S[last].node&&reached===last;
+  return `<div class="st ${f?'fail':r?'reached':'todo'}"><b>${i+1}. ${t[0]}</b> ${f?'⚠':r?'✓':'· aún no'}<br>${t[1]}</div>`}).join('')+
+  `<p class="note">Lección: la tarjeta, el KYC y la conversión de moneda suceden <b>fuera</b> de la blockchain. Solo el pago de USDC (cuenta, monto, activo, hash) queda <b>en</b> ella.</p>`;
+ $('#dlg').showModal();
+}
+
+/* ---------- Blockchain en vivo ---------- */
+let chainStarted=false,lastClose=0,es=null,seen=new Set();
+function addBlock(l,isNew){
+ if(seen.has(l.sequence))return;seen.add(l.sequence);
+ const b=document.createElement('div');b.className='blk'+(isNew?' new':'');
+ const t=new Date(l.closed_at);
+ b.innerHTML=`<b>#${l.sequence}</b>${t.toLocaleTimeString('es-CR')}<br>${l.successful_transaction_count} tx · ${l.operation_count} ops`;
+ b.onclick=()=>{$('#blkdet').innerHTML=`Ledger #${l.sequence}<br>Cerrado: ${t.toLocaleString('es-CR')}<br>Transacciones: ${l.successful_transaction_count} ok / ${l.failed_transaction_count} fallidas<br>Operaciones: ${l.operation_count}<br>Hash: ${l.hash}<br>Protocolo: v${l.protocol_version}`};
+ const belt=$('#belt');belt.prepend(b);while(belt.children.length>12)belt.lastChild.remove();
+ if(isNew){lastClose=Date.now();setTimeout(()=>b.classList.remove('new'),1500);b.onclick()}
+}
+async function startChain(){
+ if(chainStarted)return;chainStarted=true;
+ const live=$('#chainLive');
+ try{
+  const r=await fetch(`${HORIZON}/ledgers?order=desc&limit=8`).then(r=>r.json());
+  r._embedded.records.reverse().forEach(l=>addBlock(l,false));
+  lastClose=new Date(r._embedded.records.at(-1).closed_at).getTime();
+  live.className='live ok';live.textContent='En vivo · Horizon testnet';
+  es=new EventSource(`${HORIZON}/ledgers?cursor=now`);
+  es.onmessage=e=>{try{addBlock(JSON.parse(e.data),true)}catch{}};
+  const ps=new EventSource(`${HORIZON}/payments?cursor=now`);
+  ps.onmessage=e=>{try{addPay(JSON.parse(e.data))}catch{}};
+ }catch(err){
+  live.textContent='Sin conexión: bloques simulados';
+  let n=1000000;setInterval(()=>addBlock({sequence:++n,closed_at:new Date().toISOString(),successful_transaction_count:Math.floor(Math.random()*40),failed_transaction_count:0,operation_count:Math.floor(Math.random()*120),hash:'simulado',protocol_version:'—'},true),5000);
+ }
+ setInterval(()=>{const s=(Date.now()-lastClose)/1000;$('#prog').style.width=Math.min(100,s/5*100)+'%';$('#nextin').textContent=`último bloque hace ${Math.floor(s)} s`},250);
+}
+function addPay(p){
+ if(p.type!=='payment')return;
+ const f=$('#feed');if(f.firstChild&&f.firstChild.tagName==='SPAN')f.innerHTML='';
+ const d=document.createElement('div'),a=p.asset_type==='native'?'XLM':p.asset_code;
+ d.innerHTML=`<span class="mono">${p.from.slice(0,4)}…${p.from.slice(-4)} → ${p.to.slice(0,4)}…${p.to.slice(-4)}</span><b>${fmt(+p.amount,2)} ${a}</b>`;
+ f.prepend(d);while(f.children.length>30)f.lastChild.remove();
+}
+$('#chk').onclick=async()=>{
+ const a=$('#acct').value.trim(),o=$('#acctout');
+ if(!/^G[A-Z2-7]{55}$/.test(a)){o.textContent='Clave inválida. Debe empezar por G y tener 56 caracteres.';return}
+ o.textContent='Consultando…';
+ try{
+  const r=await fetch(`${HORIZON}/accounts/${a}`);
+  if(r.status===404){o.textContent='La cuenta no existe aún en testnet (fondéala con Friendbot).';return}
+  const j=await r.json();
+  o.innerHTML=j.balances.map(b=>`<div><b>${fmt(+b.balance,2)} ${b.asset_type==='native'?'XLM':b.asset_code}</b> <span class="mut">${b.asset_issuer?b.asset_issuer.slice(0,6)+'…':''}</span></div>`).join('')+`<div class="mut">Secuencia: ${j.sequence}</div>`;
+ }catch{o.textContent='No se pudo consultar Horizon.'}
+};
+
+/* ---------- Convertidor real ---------- */
+const ASSETS=['XLM','USDC','USD','CRC','ARS','CLP','EUR'];
+const usdOf=a=>a==='XLM'?R.xlm:(1/R.usd[a]);
+function convert(){
+ const v=+$('#cv').value||0,f=$('#cf').value,t=$('#ct').value,usd=v*usdOf(f);
+ const out=usd/usdOf(t);
+ $('#cres').textContent=`${fmt(v,v<1?4:2)} ${f} ≈ ${fmt(out,out<1?4:2)} ${t}`;
+ $('#ceq').innerHTML=ASSETS.filter(a=>a!==f).map(a=>`<div><span class="mut">${a}</span><b>${fmt(usd/usdOf(a),usd/usdOf(a)<1?4:2)}</b></div>`).join('');
+ $('#cnote').textContent=R.live?`Tasas reales de mercado (open.er-api.com y CoinGecko), actualizadas ${R.ts.toLocaleTimeString('es-CR')}. USDC se trata como 1 USD. En la testnet el XLM no tiene valor, pero esta es la equivalencia que tendría en la mainnet.`:'Sin conexión: valores aproximados de respaldo, no confiables.';
+}
+
+/* ---------- Init ---------- */
+$('#scn').innerHTML=$('#scn2').innerHTML=Object.entries(SCN).map(([k,v])=>`<option value="${k}">${v.n}</option>`).join('');
+$('#quick').innerHTML=[10000,25000,50000,100000].map(v=>`<button class="chip" data-v="${v}">${fmt(v,0)}</button>`).join('');
+$('#cf').innerHTML=$('#ct').innerHTML=ASSETS.map(a=>`<option>${a}</option>`).join('');
+$('#cf').value='XLM';$('#ct').value='CRC';
+mkTrack($('#track1'));mkTrack($('#track2'));
+$('#quick').onclick=e=>{if(e.target.dataset.v){$('#amt').value=e.target.dataset.v;update()}};
+['amt','cur','prod'].forEach(i=>$('#'+i).addEventListener('input',()=>{stop();step=0;update()}));
+$('#scn').onchange=()=>{$('#scn2').value=$('#scn').value;stop();step=0;update()};
+$('#scn2').onchange=()=>{$('#scn').value=$('#scn2').value;stop();step=0;update()};
+$('#play').onclick=$('#play2').onclick=play;
+$('#reset2').onclick=()=>{stop();step=0;renderAll()};
+$('#why').onclick=explain;$('#dclose').onclick=()=>$('#dlg').close();
+$('#scrub').oninput=e=>{stop();step=+e.target.value;renderAll()};
+$('#tl').onclick=e=>{const li=e.target.closest('li');if(li){stop();step=+li.dataset.k;renderAll()}};
+document.querySelectorAll('.node').forEach(n=>n.onclick=()=>{const i=+n.dataset.i,N=NODES[i];$('#nodeinfo').innerHTML=`<b>${N.n}</b>${N.w}<br><span class="mut">${N.p}</span>`});
+['cv','cf','ct'].forEach(i=>$('#'+i).addEventListener('input',convert));
+$('#swap').onclick=()=>{const a=$('#cf').value;$('#cf').value=$('#ct').value;$('#ct').value=a;convert()};
+function showTab(t){
+ document.querySelectorAll('[data-t]').forEach(b=>{const on=b.dataset.t===t;if(b.closest('#tabs'))b.setAttribute('aria-selected',on);else b.classList.toggle('cur',on)});
+ document.querySelectorAll('main>section').forEach(s=>s.classList.toggle('on',s.id===t));
+ if(t==='chain')startChain();renderAll();const sec=document.getElementById(t),hh=document.querySelector("header").offsetHeight;scrollTo({top:Math.max(0,sec.getBoundingClientRect().top+scrollY-hh-8),behavior:matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth"})}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(b)showTab(b.dataset.t)});
+document.querySelectorAll('.hero h1 span').forEach((l,i)=>l.style.animationDelay=(i*50)+'ms');
+/* decodificación del título: cada letra parpadea en hex y se resuelve */
+(()=>{if(matchMedia('(prefers-reduced-motion:reduce)').matches)return;const H='0123456789ABCDEF';
+ document.querySelectorAll('.hero h1 span').forEach((l,i)=>{const f=l.textContent,end=500+i*110;const t0=performance.now();
+  const id=setInterval(()=>{if(performance.now()-t0>end){l.textContent=f;clearInterval(id)}else l.textContent=H[Math.random()*16|0]},60)})})();
+/* mini cadena de bloques */
+(()=>{const rail=$('#mcRail'),box=rail&&rail.parentElement;if(!rail)return;
+ const h8=s=>{let a=0xdeadbeef,b=0x41c6ce57;for(let i=0;i<s.length;i++){const c=s.charCodeAt(i);a=Math.imul(a^c,2654435761);b=Math.imul(b^c,1597334677)}
+  a=Math.imul(a^a>>>16,2246822507)^Math.imul(b^b>>>13,3266489909);return(a>>>0).toString(16).padStart(8,'0')};
+ const rnd=()=>Array.from({length:4},()=>'0123456789abcdef'[Math.random()*16|0]).join('');
+ const chain=[];let n=0,busy=false;
+ const actual=b=>h8(b.prev+b.data);
+ function paint(b){b.el.innerHTML='<b>#'+b.n+'</b>prev<br><i>'+b.prev+'</i><br>datos <i>'+b.data+'</i><br>hash<br><i>'+(b.pend?'········':b.hash)+'</i>'}
+ function validate(){let broken=false;chain.forEach((b,i)=>{if(!broken&&!b.pend&&actual(b)!==b.hash)broken=true;b.el.classList.toggle('bad',broken);if(b.link)b.link.classList.toggle('bad',broken)})}
+ function place(){const tx=Math.min(0,box.clientWidth-rail.scrollWidth-24);rail.style.transform='translateX('+tx+'px)'}
+ function add(sealNow){const prev=chain.length?chain[chain.length-1].hash:'00000000',b={n:++n,prev,data:rnd(),pend:!sealNow};b.hash=actual(b);
+  if(chain.length){b.link=document.createElement('div');b.link.className='ml';rail.append(b.link)}
+  b.el=document.createElement('div');b.el.className='mb'+(b.pend?' pend':'');b.el.tabIndex=0;rail.append(b.el);paint(b);chain.push(b);
+  const tamper=()=>{if(b.pend)return;if(b.orig){b.data=b.orig;b.orig=null}else{b.orig=b.data;b.data=rnd()}paint(b);validate()};
+  b.el.onclick=tamper;b.el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();tamper()}};
+  while(chain.length>7){const o=chain.shift();o.el.remove();if(o.link)o.link.remove();if(chain[0]&&chain[0].link){chain[0].link.remove();chain[0].link=null}}
+  place();
+  if(b.pend){busy=true;const t0=performance.now(),id=setInterval(()=>{if(performance.now()-t0>1100){clearInterval(id);b.pend=false;b.el.classList.remove('pend');b.el.classList.add('new');paint(b);validate();busy=false}else{b.el.querySelector('i:last-child').textContent=h8(Math.random()+'')}},70)}}
+ for(let i=0;i<4;i++)add(true);
+ setInterval(()=>{if(!busy&&!document.hidden)add(false)},3400);addEventListener('resize',place)})();
+addEventListener('resize',renderAll);
+update();convert();loadRates();
+
+</script>
+</body>
+</html>
